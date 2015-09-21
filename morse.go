@@ -1,10 +1,11 @@
-package main;
+package main
 
 import(
     "fmt"
     "reflect"
     "bytes"
     "errors"
+    "strings"
 )
 
 var lookupMorse = map[rune]string {
@@ -34,43 +35,48 @@ var lookupMorse = map[rune]string {
     'x': "-..-",
     'y': "-.--",
     'z': "--..",
-    ' ': "       ",
+    ' ': "    ",
 }
 
 
-func MorseMarshal(t Test) ([]byte, error) {
+func MorseMarshal(m Messages) ([]byte, error) {
     var b bytes.Buffer
 
-    tt := reflect.TypeOf(t)
-    vt := reflect.ValueOf(&t).Elem()
-    for i := 0; i < tt.NumField(); i++ {
-        ttField := tt.Field(i)
-        vtField := vt.Field(i)
+    mType := reflect.TypeOf(m)
+    mValue := reflect.ValueOf(&m).Elem()
+    for i := 0; i < mType.NumField(); i++ {
+        mTypeField := mType.Field(i)
+        mValueField := mValue.Field(i)
 
-        parsedTag, _ /*options*/ := parseTag(ttField.Tag.Get("morse"))
-        if(parsedTag == "-") {
+        tags := DecodeTag(mTypeField.Tag, "morse")
+
+        _, omit := tags["-"]
+        if(omit) {
             continue
         }
 
-//        log.Printf("P: %+v", parsedTag)
-//        log.Printf("O %+v", options)
-
-        if(vtField.Kind() != reflect.String) {
+        if(mValueField.Kind() != reflect.String) {
             continue
         }
 
-        fmt.Fprintf(&b, "%s: ", ttField.Name)
+        fmt.Fprintf(&b, "%s: ", mTypeField.Name)
 
-        for _, c := range vtField.Interface().(string) {
+        for _, c := range mValueField.String() {
             morse, ok := lookupMorse[c]
             if !ok {
                 return []byte{}, errors.New("Unexpected character")
             }
 
+            _, shout := tags["shout"]
+            if(shout) {
+                morse = strings.Replace(morse, ".", "•", -1)
+                morse = strings.Replace(morse, "-", "=", -1)
+            }
+
             fmt.Fprintf(&b, "%s ", morse)
         }
 
-        fmt.Fprintf(&b, "\n")
+        fmt.Fprintf(&b, "\n\n")
     }
 
     return b.Bytes(), nil
