@@ -3,7 +3,6 @@ package main
 import(
     "log"
     "fmt"
-    pretty "github.com/tonnerre/golang-pretty"
 )
 
 type Messages struct {
