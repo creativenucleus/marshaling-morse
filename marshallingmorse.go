@@ -24,6 +24,6 @@ func main() {
     if err != nil {
         log.Printf("XXX Unable to marshal :(\n")
     } else {
-        pretty.Printf("=> Marshalled...\n%+v", string(marshalled[:]))
+        fmt.Printf("=> Marshalled...\n%+v", string(marshalled[:]))
     }
 }
